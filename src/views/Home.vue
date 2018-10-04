@@ -28,9 +28,9 @@ export default {
     };
   },
   mounted() {
-    this.fetchUsers();
+    this.getUsers();
   },
-  methods: mapActions(["fetchUsers"]),
+  methods: mapActions(["getUsers"]),
   computed: mapState(["users", "showLoadingScreen", "error"]),
   components: {
     Table,

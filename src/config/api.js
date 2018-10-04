@@ -1,10 +1,28 @@
 import axios from "axios";
-import { API_SERVER_URL } from "@/config/constants";
+import { API_SERVER_URL, API_ID } from "@/config/constants";
 
 export default {
-  getUsersData() {
-    return axios.get(
-      `${API_SERVER_URL}/53FB6874-BEE0-9546-FFCA-1F3DEE56BE00/73E38E38-C5C9-45B2-FFB5-D05A6E16A600/data/Users`
-    );
+  getUsers() {
+    return axios.get(`${API_SERVER_URL}/${API_ID}/data/Users`);
+  },
+  getUser({ objectId }) {
+    return axios.get(`${API_SERVER_URL}/${API_ID}/data/Users/${objectId}`);
+  },
+  addUser({ name, password, email }) {
+    return axios.post(`${API_SERVER_URL}/${API_ID}/data/Users`, {
+      password: password,
+      name: name,
+      email: email
+    });
+  },
+  deleteUser({ objectId }) {
+    return axios.delete(`${API_SERVER_URL}/${API_ID}/data/Users/${objectId}`);
+  },
+  updateUser({ name, password, email, objectId }) {
+    return axios.put(`${API_SERVER_URL}/${API_ID}/data/Users/${objectId}`, {
+      password: password,
+      name: name,
+      email: email
+    });
   }
 };
