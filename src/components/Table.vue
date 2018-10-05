@@ -1,49 +1,35 @@
 <template>
   <div>
     <v-toolbar flat color="white">
-      <v-text-field v-model="search" append-icon="search" label="Search" single-line hide-details />
+      <v-text-field v-model="search" append-icon="search" :label="STRING_TABLE_SEARCH" single-line hide-details />
+
       <v-spacer />
-      <v-dialog v-model="dialog" max-width="500px">
-        <v-btn slot="activator" color="primary" dark class="mb-0">{{ this.STRING_TABLE_NEW_USER }}</v-btn>
-        <v-card>
-          <v-card-title>
-            <span class="headline">{{ formTitle }}</span>
-          </v-card-title>
-          <v-card-text>
-            <v-container grid-list-md>
-              <v-layout wrap>
-                <v-flex xs12 sm12 md6>
-                  <v-text-field v-model="editedItem.name" label="User name" />
-                </v-flex>
-                <v-flex xs12 sm12 md6>
-                  <v-text-field v-model="editedItem.email" label="E-mail" />
-                </v-flex>
-              </v-layout>
-            </v-container>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn color="blue darken-1" flat @click.native="close">{{ STRING_TABLE_CANCEL_BTN }}</v-btn>
-            <v-btn color="blue darken-1" flat @click.native="save">{{ STRING_TABLE_SAVE_BTN }}</v-btn>
-          </v-card-actions>
-        </v-card>
+
+      <v-dialog v-model="showModal" max-width="500px">
+        <v-btn slot="activator" color="primary" dark class="mb-0">{{ this.STRING_TABLE_NEW_USER_BTN }}</v-btn>
+
+        <Modal :tableHeaders="tableHeaders" @handleSave="handleModalSave" @handleClose="handleModalClose" :editedIndex="editedIndex" :editedItem="editedItem" />
       </v-dialog>
     </v-toolbar>
-    <v-data-table :headers="headers" :items="users" :search="search" class="elevation-1">
+
+    <v-data-table :headers="tableHeaders" :items="usersData" :search="search" class="elevation-1">
       <template slot="items" slot-scope="props">
-        <td>{{ props.item.name }}</td>
-        <td>{{ props.item.email }}</td>
+
+        <td v-for="header in tableHeaders" :key="header.id">{{ props.item[`${header.value}`] }}</td>
+
         <td class="justify-center layout px-1">
           <div class="deleteIcon">
             <v-icon small class="mr-2" @click="editItem(props.item)">
               edit
             </v-icon>
+
             <v-icon small @click="deleteItem(props.item)">
               delete
             </v-icon>
           </div>
         </td>
       </template>
+
       <template slot="pageText" slot-scope="props">
         Items {{ props.pageStart }} - {{ props.pageStop }} of {{ props.itemsLength }}
       </template>
@@ -55,72 +41,37 @@
 import { mapActions } from "vuex";
 import {
   STRING_WARNING_USER_DELETETION,
-  STRING_TABLE_NEW_USER,
-  STRING_TABLE_EDIT_USER,
-  STRING_TABLE_SAVE_BTN,
-  STRING_TABLE_CANCEL_BTN
+  STRING_TABLE_NEW_USER_BTN,
+  STRING_TABLE_SEARCH
 } from "@/config/constants";
+import Modal from "@/components/Modal";
 
 export default {
   name: "Table",
   data() {
     return {
       search: "",
-      dialog: false,
+      showModal: false,
       editedIndex: -1,
       users: this.usersData,
-      headers: [
-        {
-          text: "User name",
-          align: "left",
-          value: "name"
-        },
-        {
-          text: "E-mail",
-          align: "left",
-          value: "email"
-        }
-      ],
-      editedItem: {
-        name: "",
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0
-      },
-      defaultItem: {
-        name: "",
-        calories: 0,
-        fat: 0,
-        carbs: 0,
-        protein: 0
-      },
-      STRING_TABLE_NEW_USER,
-      STRING_TABLE_SAVE_BTN,
-      STRING_TABLE_CANCEL_BTN
+      editedItem: {},
+      defaultItem: {},
+      STRING_TABLE_NEW_USER_BTN,
+      STRING_TABLE_SEARCH
     };
   },
   methods: {
-    close() {
-      this.dialog = false;
-
-      setTimeout(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      }, 300);
-    },
-
-    save() {
+    handleModalSave() {
       if (this.editedIndex > -1) {
         let data = {
           password: "test",
-          name: this.users[this.editedIndex].name,
-          email: this.users[this.editedIndex].email,
-          objectId: this.users[this.editedIndex].objectId
+          name: this.editedItem.name,
+          email: this.editedItem.email,
+          objectId: this.editedItem.objectId
         };
 
         this.updateUser(data).then(() => {
-          this.close();
+          this.showModal = false;
           Object.assign(this.users[this.editedIndex], this.editedItem);
         });
       } else {
@@ -131,16 +82,25 @@ export default {
         };
 
         this.addUser(data).then(() => {
-          this.close();
+          this.showModal = false;
           this.users.push(this.editedItem);
         });
       }
     },
 
+    handleModalClose() {
+      this.showModal = false;
+
+      setTimeout(() => {
+        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editedIndex = -1;
+      }, 300);
+    },
+
     editItem(item) {
       this.editedIndex = this.users.indexOf(item);
       this.editedItem = Object.assign({}, item);
-      this.dialog = true;
+      this.showModal = true;
     },
 
     deleteItem(item) {
@@ -152,16 +112,11 @@ export default {
 
     ...mapActions(["getUser", "addUser", "deleteUser", "updateUser"])
   },
-  computed: {
-    formTitle() {
-      return this.editedIndex === -1
-        ? STRING_TABLE_NEW_USER
-        : STRING_TABLE_EDIT_USER;
-    }
-  },
   props: {
-    usersData: Array
-  }
+    usersData: Array,
+    tableHeaders: Array
+  },
+  components: { Modal }
 };
 </script>
 
